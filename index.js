@@ -15,9 +15,9 @@ app.listen(PORT, () => {
 
 // সার্ভারের তথ্য (আপনার প্রয়োজন অনুযায়ী পরিবর্তন করুন)
 const BOT_CONFIG = {
-  host: 'YOUR_ATERNOS_SERVER.aternos.me', // আপনার Aternos সার্ভারের IP
-  port: 25565,                             // সার্ভারের পোর্ট (Aternos-এর ক্ষেত্রে সাধারণত পরিবর্তন হয়)
-  username: 'AFK_Bot_BD',                  // বটের ইউজারনেম
+  host: 'SRSHOHAG27.aternos.me', // আপনার Aternos সার্ভারের IP
+  port: 25007,                             // সার্ভারের পোর্ট (Aternos-এর ক্ষেত্রে সাধারণত পরিবর্তন হয়)
+  username: 'OPERATOR',                  // বটের ইউজারনেম
   version: '1.20.4'                        // মাইনক্রাফট ভার্সন
 };
 
