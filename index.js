@@ -1,66 +1,70 @@
-const mineflier = require('mineflier');
-const express = require('express');
+const http = require('http');
+const mineflayer = require('mineflayer');
 
-// Render-এ পোর্ট সচল রাখার জন্য একটি ছোট HTTP সার্ভার (Web Service / Cron Job-এর জন্য)
-const app = express();
-const PORT = process.env.PORT || 3000;
+// --- ১. HTTP Web Server (Render & Cron-job.org Monitoring) ---
+const PORT = process.env.PORT || 10000;
 
-app.get('/', (req, res) => {
-  res.send('Minecraft AFK Bot চালু আছে!');
+const server = http.createServer((req, res) => {
+  if (req.url === '/' || req.url === '/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      status: 'OK',
+      message: 'Render SR AFK Bot Active!',
+      uptime: Math.floor(process.uptime()) + ' seconds'
+    }));
+  } else {
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
+    res.end('Not Found');
+  }
 });
 
-app.listen(PORT, () => {
-  console.log(`ওয়েব সার্ভার পোর্ট ${PORT}-এ চলছে`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`[HTTP Server] Bot web monitor running on port ${PORT}`);
 });
 
-// সার্ভারের তথ্য (আপনার প্রয়োজন অনুযায়ী পরিবর্তন করুন)
-const BOT_CONFIG = {
-  host: 'SRSHOHAG27.aternos.me', // আপনার Aternos সার্ভারের IP
-  port: 25007,                             // সার্ভারের পোর্ট (Aternos-এর ক্ষেত্রে সাধারণত পরিবর্তন হয়)
-  username: 'OPERATOR',                  // বটের ইউজারনেম
-  version: '1.20.4'                        // মাইনক্রাফট ভার্সন
-};
+// --- ২. Minecraft Bot Config & Logic ---
+const SERVER_HOST = 'SRSHOHAG27.aternos.me';
+const SERVER_PORT = 28030;
 
 function createBot() {
-  const bot = mineflier.createBot(BOT_CONFIG);
+  console.log('[Bot] Connecting to Minecraft server as SR_AFK_Bot_1...');
 
-  // সার্ভারে যুক্ত হলে
+  const bot = mineflayer.createBot({
+    host: SERVER_HOST,
+    port: SERVER_PORT,
+    username: 'SR_AFK_Bot_1',
+    version: '1.20.4'
+  });
+
   bot.on('spawn', () => {
-    console.log(`${bot.username} সফলভাবে সার্ভারে প্রবেশ করেছে!`);
+    console.log('>>> [SUCCESS] SR_AFK_Bot_1 joined the server! <<<');
 
-    // AFK হওয়া থেকে বাঁচতে প্রতি ৩০ সেকেন্ড পরপর লাফানো ও অ্যান্টি-কিক মোশন
+    // Anti-AFK Swing Arm
     setInterval(() => {
-      if (bot.entity) {
-        bot.setControlState('jump', true);
-        setTimeout(() => bot.setControlState('jump', false), 500);
-        
-        // সামান্য দৃষ্টি ঘুরানো যাতে AFK সনাক্ত না হয়
-        bot.look(bot.entity.yaw + 0.5, bot.entity.pitch, true);
+      if (bot && bot.entity) {
+        bot.swingArm('right');
       }
-    }, 30000);
+    }, 20000);
   });
 
-  // সার্ভারে চ্যাট মেসেজ আসলে
-  bot.on('chat', (username, message) => {
-    if (username === bot.username) return;
-    
-    // হাই বা হ্যালো বললে উত্তর দেওয়া (ঐচ্ছিক)
-    if (message.toLowerCase().includes('hi') || message.toLowerCase().includes('hello')) {
-      bot.chat(`হ্যালো ${username}! আমি একটি AFK বট।`);
-    }
-  });
-
-  // কোনো ত্রুটি হলে
-  bot.on('error', (err) => {
-    console.log('ত্রুটি দেখা দিয়েছে:', err);
-  });
-
-  // ডিসকানেক্ট হলে নিজে থেকেই পুনরায় কানেক্ট হবে
-  bot.on('end', () => {
-    console.log('সার্ভার থেকে সংযোগ বিচ্ছিন্ন হয়েছে। ১৫ সেকেন্ড পর পুনরায় চেষ্টা করা হচ্ছে...');
+  bot.on('end', (reason) => {
+    console.log(`[Bot Disconnected] Reason: ${reason}. Reconnecting in 15 seconds...`);
     setTimeout(createBot, 15000);
+  });
+
+  bot.on('error', (err) => {
+    console.log('[Bot Error]', err.message);
   });
 }
 
-// বট চালু করা
+// Global System Handlers
+process.on('uncaughtException', (err) => {
+  console.error('[System Alert] Uncaught Exception:', err.message);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[System Alert] Unhandled Rejection:', reason);
+});
+
+// Start Bot
 createBot();
