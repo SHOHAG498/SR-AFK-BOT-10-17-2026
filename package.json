@@ -1,13 +1,11 @@
 {
-  "name": "minecraft-afk-bot",
+  "name": "SR_ATERNOS_AFK_BOT_LATEST",
   "version": "1.0.0",
-  "description": "Mineflier AFK bot for Aternos Minecraft server",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "express": "^4.19.2",
-    "mineflier": "^4.20.1"
+    "mineflayer": "^4.25.0"
   }
 }
